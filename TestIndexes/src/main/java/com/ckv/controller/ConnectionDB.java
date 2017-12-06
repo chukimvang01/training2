@@ -1,6 +1,5 @@
 package com.ckv.controller;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -50,6 +49,90 @@ public class ConnectionDB {
 		}
 		return timeNew - currentTime;
 	}
+	public long getTimeHandlingQueriesHasIndexMultiColumn() {
+		String sql = "select*from userinfom where country = 'Hazleh' and sex IN('Male','Female') and dob > '1994-11-07'";
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}
+	public long getTimeHandlingQueriesHasIndexCovering1(String nameTable) {
+		String sql = "SELECT country, sex, dob FROM "+nameTable;
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}
+	public long getTimeHandlingQueriesHasIndexCovering2(String nameTable) {
+		String sql = "SELECT * FROM "+nameTable+" JOIN (SELECT id FROM "+nameTable+" WHERE country = 'Enigma') AS t ON (t.id = "+nameTable+".id)";
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}	
+	public long getTimeHandlingQueriesHasIndexForSorts(String nameTable) {
+		String sql = "SELECT * FROM "+nameTable+" WHERE country = 'Moultrie' AND sex='Male' ORDER BY dob";
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}
+	public long getTimeHandlingQueriesHasIndexRedundant1(String nameTable) {
+		String sql = "SELECT*FROM "+nameTable+" WHERE country = 'Patterson'";
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}	
+	public long getTimeHandlingQueriesHasIndexRedundant2(String nameTable) {
+		String sql = "SELECT country, sex, dob FROM "+nameTable+" WHERE country ='Patterson' ";
+		long currentTime = 0, timeNew = 0;
+
+		try {
+			PreparedStatement ps = connection.prepareStatement(sql);
+			currentTime = System.currentTimeMillis();
+			ps.executeQuery();
+			timeNew = System.currentTimeMillis();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return timeNew - currentTime;
+	}	
 	public void resetQueryCache(){
 		String sql="reset query cache";
 		
@@ -60,47 +143,21 @@ public class ConnectionDB {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public long pushDatabaseFromFileToTableNoIndex(String path){
-		String sql="load data local infile'"+path+"' into table userinfo";
-		long timeStamp=0,timeCurrent=0;
-		try {
-			PreparedStatement ps=connection.prepareStatement(sql);
-			timeStamp=System.currentTimeMillis();
-			ps.executeQuery();
-			timeCurrent=System.currentTimeMillis();
-			System.out.println("Load data to table no index sucessfull!");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return timeCurrent-timeStamp;
-	}
-	
-	public long pushDatabaseFromFileToTableHasIndex(String path){
-		String sql="load data local infile'"+path+"' into table userinfoi";
-		long timeStamp=0,timeCurrent=0;
-		try {
-			PreparedStatement ps=connection.prepareStatement(sql);
-			timeStamp=System.currentTimeMillis();
-			ps.executeQuery();
-			timeCurrent=System.currentTimeMillis();
-			System.out.println("Load data to table has index sucessfull!");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return timeCurrent-timeStamp;
-	}
-	public static void main(String[] args) {
-		String url="jdbc:mysql://localhost:3306/test";
-		ConnectionDB con=new ConnectionDB(url, "root", "12345678");
-		long timeHasIndex=con.getTimeHandlingQueriesHasIndex();
-		long timeNoIndex=con.getTimeHandlingQueriesNoIndex();
-		con.resetQueryCache();
 		System.out.println();
-		System.out.println("Time to query with table has index is: "+new BigDecimal(timeHasIndex/1000f)+" sec");
-		System.out.println("Time to query with table no index is: "+new BigDecimal(timeNoIndex/1000f)+ " sec");
-		
 	}
 	
+	public long pushDatabaseFromFileToTable(String nameTable, String path){
+		String sql="load data local infile'"+path+"' into table "+nameTable;
+		long timeStamp=0,timeCurrent=0;
+		try {
+			PreparedStatement ps=connection.prepareStatement(sql);
+			timeStamp=System.currentTimeMillis();
+			ps.executeQuery();
+			timeCurrent=System.currentTimeMillis();
+			System.out.println("Load data to table sucessfull!");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return timeCurrent-timeStamp;
+	}	
 }

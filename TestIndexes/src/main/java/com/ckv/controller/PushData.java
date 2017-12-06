@@ -14,13 +14,16 @@ import org.fluttercode.datafactory.impl.DataFactory;
 
 public class PushData {
 
+	public static final String PATH = "E:/datauser.txt";
+	public static final String URL = "jdbc:mysql://localhost:3306/test";
 	private DataFactory data;
+	private ConnectionDB con;
 
 	public PushData() {
 		data = new DataFactory();
+		con = new ConnectionDB(URL, "root", "12345678");
 	}
 
-	@SuppressWarnings("deprecation")
 	public void createData() {
 
 		try {
@@ -29,7 +32,6 @@ public class PushData {
 			List<String> l = new ArrayList<String>();
 
 			SimpleDateFormat fd = new SimpleDateFormat("yyyy-mm-dd");
-			Date maxDate = new Date();
 			for (int i = 1; i <= 1000000; i++) {
 				String name = data.getFirstName() + "\t" + data.getLastName();
 				String sex = data.getItem(Arrays.asList("Male", "Female"));
@@ -38,13 +40,13 @@ public class PushData {
 				String dOB = fd.format(doB);
 				String country = data.getCity();
 
-				String rs = "/N\t" + name + "\t" + sex + "\t" + dOB + "\t" + country;
+				String rs = "/N\t" + name + "\t" + sex + "\t" + dOB + "\t" + country + "\t";
 				l.add(rs);
 				if (i % 1000 == 0) {
 					FileUtils.writeLines(f, l, true);
 					l.clear();
 				}
-				System.out.println(i/10000f +" %");
+				System.out.println(i / 10000f + " %");
 			}
 
 			System.out.println("Create sucessfull!");
@@ -54,15 +56,10 @@ public class PushData {
 
 	}
 
-	public static void main(String[] args) {
-		//new PushData().createData();
-		String path = "E:/datauser.txt";
-		String url = "jdbc:mysql://localhost:3306/test";
-		ConnectionDB con=new ConnectionDB(url, "root", "12345678");
-		long timeCreateDataNoIndex = con.pushDatabaseFromFileToTableNoIndex(path);
-		//long timeCreateDataHasIndex = con.pushDatabaseFromFileToTableHasIndex(path);
-		System.out.println(new BigDecimal(timeCreateDataNoIndex/1000f)+" sec");
-		//System.out.println(new BigDecimal(timeCreateDataHasIndex/1000f)+" sec");
+	public void pushDataFromFiletoTable(String nametable) {
+		long time = con.pushDatabaseFromFileToTable(nametable, PATH);
+		System.out.println("Push data to " + nametable + " in (" + new BigDecimal(time / 1000f) + "sec )");
 	}
+
 
 }
